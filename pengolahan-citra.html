@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1">
+
+<title>Pengolahan Citra Digital</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+rel="stylesheet">
+
+<script async
+src="https://docs.opencv.org/4.x/opencv.js">
+</script>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+}
+
+.page{
+    display:none;
+    min-height:100vh;
+    padding:20px;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    position:relative;
+}
+
+.active{
+    display:flex;
+}
+
+.home{
+    background:
+    linear-gradient(
+    135deg,
+    #ff6a00,
+    #d81b9c,
+    #4b5cff
+    );
+}
+
+.pink{
+    background:
+    linear-gradient(
+    135deg,
+    #f15b94,
+    #d14ca8
+    );
+}
+
+.blue{
+    background:
+    linear-gradient(
+    135deg,
+    #7ca8e6,
+    #6b9ae4
+    );
+}
+
+.title{
+    color:white;
+    font-weight:bold;
+    margin-bottom:20px;
+}
+
+.card-box{
+    background:
+    rgba(255,255,255,.15);
+
+    border:none;
+
+    border-radius:16px;
+
+    padding:15px;
+
+    backdrop-filter:blur(8px);
+}
+
+canvas{
+    width:100%;
+    background:white;
+    border-radius:12px;
+}
+
+.back-btn{
+    position:absolute;
+    top:20px;
+    left:20px;
+    background:#dc3545;
+    color:white;
+    border:none;
+    border-radius:8px;
+    padding:8px 14px;
+    font-size:14px;
+}
+
+.back-btn:hover{
+    background:#bb2d3b;
+}
+
+.top-actions{
+    position:absolute;
+    top:20px;
+    right:20px;
+    display:flex;
+    gap:10px;
+}
+
+.icon-btn{
+    background:white;
+    color:#333;
+    border:none;
+    border-radius:8px;
+    padding:8px 14px;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.icon-btn:hover{
+    background:#f1f1f1;
+}
+
+.bottom-back{
+    margin-top:20px;
+    display:flex;
+    justify-content:flex-start;
+}
+
+.bottom-back{
+    position:absolute;
+    bottom:20px;
+    left:20px;
+}
+
+.bottom-back .btn{
+    border-radius:8px;
+    padding:8px 18px;
+    font-size:14px;
+}
+
+img,
+canvas{
+    max-width:100%;
+    height:auto;
+    border-radius:12px;
+}
+
+.container{
+    width:100%;
+    max-width:500px;
+}
+
+button{
+    min-height:48px;
+}
+
+@media(max-width:576px){
+
+    h2{
+        font-size:24px;
+    }
+
+    .title{
+        font-size:22px;
+    }
+
+    .btn{
+        font-size:16px;
+        padding:12px;
+    }
+}
+
+.result-box{
+    margin-top:20px;
+    padding:18px;
+    background:rgba(255,255,255,0.9);
+    border-radius:16px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.12);
+    color:#333;
+    line-height:1.6;
+}
+
+.result-box h4{
+    margin-bottom:10px;
+    color:#4f46e5;
+}
+
+.result-box strong{
+    color:#111827;
+}
+
+#before, #after {
+    width: 100%;
+    height: 220px;
+    object-fit: contain;
+    background: white;
+    border-radius: 12px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="page active home" id="login">
+
+    <div class="text-center">
+
+        <h2 class="title">
+            Pengolahan Citra Digital
+        </h2>
+
+        <input
+            type="text"
+            id="loginNama"
+            class="form-control mb-3"
+            placeholder="Masukkan nama">
+
+        <div class="position-relative mb-3">
+            <input
+                type="password"
+                id="loginPassword"
+                class="form-control"
+                placeholder="Masukkan password"
+                style="padding-right: 40px;">
+            <span
+                onclick="togglePass('loginPassword', this)"
+                style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#aaa; font-size:18px;">
+                <i class="bi bi-eye-slash"></i>
+            </span>
+        </div>
+
+        <button
+            class="btn btn-light btn-lg w-100 mb-3"
+            onclick="loginUser()">
+
+            Masuk
+
+        </button>
+
+        <button
+            class="btn btn-outline-light btn-lg w-100 mb-3"
+            onclick="show('register')">
+
+            Daftar
+
+        </button>
+
+        <button
+            class="btn btn-success btn-lg w-100"
+            onclick="guestMode()">
+
+            Continue as Guest
+
+        </button>
+
+    </div>
+
+</div>
+
+<!-- REGISTER -->
+<div class="page" id="register">
+
+    <div class="text-center">
+
+        <h2 class="title">
+            Daftar Akun
+        </h2>
+
+        <input
+            type="text"
+            id="regNama"
+            class="form-control mb-3"
+            placeholder="Nama lengkap">
+
+        <input
+            type="date"
+            id="regTanggal"
+            class="form-control mb-3">
+
+        <div class="position-relative mb-3">
+            <input
+                type="password"
+                id="regPassword"
+                class="form-control"
+                placeholder="Password"
+                style="padding-right: 40px;">
+            <span
+                onclick="togglePass('regPassword', this)"
+                style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#aaa; font-size:18px;">
+                <i class="bi bi-eye-slash"></i>
+            </span>
+        </div>
+
+        <button
+            class="btn btn-light w-100 mb-3"
+            onclick="registerUser()">
+
+            Daftar
+
+        </button>
+
+        <button
+            class="btn btn-danger"
+            onclick="show('login')">
+
+            Back
+
+        </button>
+
+    </div>
+
+</div>
+
+<!-- MENU -->
+<div
+class="page home"
+id="menu">
+
+<div class="top-actions">
+
+<button
+class="btn btn-warning"
+onclick="logoutUser()">
+
+Logout
+
+</button>
+
+</div>
+
+<div class="container text-center">
+
+<h2 class="title">
+Menu
+</h2>
+
+<div class="row g-3">
+
+<div class="col-md-6">
+
+<button
+class="btn btn-light btn-lg w-100"
+onclick="
+previousPage='menu';
+show('segmentasi')">
+
+Segmentasi
+
+</button>
+
+</div>
+
+<div class="col-md-6">
+
+<button
+class="btn btn-light btn-lg w-100"
+onclick="
+previousPage='menu';
+show('filtering')">
+
+Filtering
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+<!-- SEGMENTASI -->
+<div
+class="page pink"
+id="segmentasi">
+
+<div class="bottom-back">
+
+<button
+class="btn btn-danger"
+onclick="show('menu')">
+
+Back
+
+</button>
+
+</div>
+
+<div class="container text-center">
+
+<h2 class="title">
+
+Edge Base Segmentation
+
+</h2>
+
+<button
+class="btn btn-light w-100 mb-2"
+onclick="setMode('canny')">
+
+Canny
+
+</button>
+
+<button
+class="btn btn-light w-100 mb-2"
+onclick="setMode('sobel')">
+
+Sobel
+
+</button>
+
+<button
+class="btn btn-light w-100 mb-2"
+onclick="setMode('prewitt')">
+
+Prewitt
+
+</button>
+
+</div>
+</div>
+
+<!-- FILTER -->
+<div
+class="page blue"
+id="filtering">
+
+<div class="bottom-back">
+
+<button
+class="btn btn-danger"
+onclick="show('menu')">
+
+Back
+
+</button>
+
+</div>
+
+<div class="container text-center">
+
+<h2 class="title">
+
+Filtering
+
+</h2>
+
+<button
+class="btn btn-light w-100 mb-2"
+onclick="setMode('lowpass')">
+
+Low Pass Filter
+
+</button>
+
+<button
+class="btn btn-light w-100 mb-2"
+onclick="setMode('highpass')">
+
+High Pass Filter
+
+</button>
+
+</div>
+</div>
+
+<!-- TOOL -->
+<div
+class="page pink"
+id="tool">
+
+<div class="top-actions">
+
+<button
+class="icon-btn"
+onclick="undoImage()">
+
+↶
+
+</button>
+
+<button
+class="icon-btn"
+onclick="redoImage()">
+
+↷
+
+</button>
+
+</div>
+
+<div class="container">
+
+<h2
+id="toolTitle"
+class="title text-center">
+
+Tool
+
+</h2>
+
+<div class="row mb-3">
+
+<div class="col-md-6">
+
+<input
+class="form-control"
+type="file"
+id="upload"
+accept="image/*">
+
+</div>
+
+<div class="col-md-6" id="sliderBox">
+
+<input
+class="form-range"
+type="range"
+id="slider"
+min="1"
+max="100"
+value="50">
+
+</div>
+
+</div>
+
+<div class="row g-4">
+
+<div class="col-md-6">
+
+<div class="card-box text-center">
+
+<p class="text-white">
+Before
+</p>
+
+<canvas id="before"></canvas>
+
+</div>
+</div>
+
+<div class="col-md-6">
+
+<div class="card-box text-center">
+
+<p class="text-white">
+After
+</p>
+
+<canvas id="after"></canvas>
+
+</div>
+</div>
+
+</div>
+<div class="result-box" id="resultBox" style="display:none;">
+    <h4>Hasil Analisis</h4>
+
+    <p>
+        <strong>Sebelum:</strong>
+        Gambar asli yang diunggah pengguna.
+    </p>
+
+    <p>
+        <strong>Sesudah:</strong>
+        <span id="analysisText"></span>
+    </p>
+</div>
+<div
+class="d-grid gap-2 mt-4">
+
+<button
+class="btn btn-success"
+onclick="processImage()">
+
+Proses
+
+</button>
+
+<button
+class="btn btn-warning"
+onclick="downloadResult()">
+
+Download
+
+</button>
+
+<div class="bottom-back">
+
+<button
+class="btn btn-danger"
+onclick="backToPrevious()">
+
+Back
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+<script>
+
+function togglePass(id, span){
+    const input = document.getElementById(id);
+    const icon = span.querySelector("i");
+    if(input.type === "password"){
+        input.type = "text";
+        icon.className = "bi bi-eye";
+    } else {
+        input.type = "password";
+        icon.className = "bi bi-eye-slash";
+    }
+}
+
+let isGuest = false;
+
+function registerUser(){
+
+    const nama =
+        document.getElementById("regNama").value;
+
+    const tanggal =
+        document.getElementById("regTanggal").value;
+
+    const password =
+        document.getElementById("regPassword").value;
+
+    if(
+        nama === "" ||
+        tanggal === "" ||
+        password === ""
+    ){
+        alert("Lengkapi data dulu");
+        return;
+    }
+
+    localStorage.setItem("nama", nama);
+    localStorage.setItem("tanggal", tanggal);
+    localStorage.setItem("password", password);
+
+    alert("Daftar berhasil");
+
+    show("login");
+}
+
+function loginUser(){
+
+    const nama =
+        document.getElementById("loginNama").value;
+
+    const password =
+        document.getElementById("loginPassword").value;
+
+    const savedNama =
+        localStorage.getItem("nama");
+
+    const savedPassword =
+        localStorage.getItem("password");
+
+    if(
+        nama === savedNama &&
+        password === savedPassword
+    ){
+        isGuest = false;
+        show("menu");
+    }
+
+    else{
+        alert("Daftar untuk membuat akun");
+    }
+}
+
+function guestMode(){
+    isGuest = true;
+    show("menu");
+}
+
+let srcImage = null;
+let mode = "canny";
+let previousPage = "menu";
+
+let history = [];
+let historyIndex = -1;
+
+function show(id){
+    document
+    .querySelectorAll(".page")
+    .forEach(p => p.classList.remove("active"));
+
+    document
+    .getElementById(id)
+    .classList.add("active");
+}
+
+function setMode(m){
+
+    mode = m;
+
+    if(
+        m === "canny" ||
+        m === "sobel" ||
+        m === "prewitt"
+    ){
+        previousPage = "segmentasi";
+
+        document
+        .getElementById("tool")
+        .className = "page active pink";
+    }
+
+    else{
+        previousPage = "filtering";
+
+        document
+        .getElementById("tool")
+        .className = "page active blue";
+    }
+
+    document
+    .getElementById("toolTitle")
+    .innerText =
+    m
+    .replace("canny","Canny")
+    .replace("sobel","Sobel")
+    .replace("prewitt","Prewitt")
+    .replace("lowpass","Low Pass Filter")
+    .replace("highpass","High Pass Filter");
+
+    // tampilkan slider hanya untuk filtering
+const sliderBox =
+document.getElementById("sliderBox");
+
+if(
+    m === "lowpass" ||
+    m === "highpass"
+){
+    sliderBox.style.display = "block";
+}
+else{
+    sliderBox.style.display = "none";
+}
+
+    show("tool");
+}
+
+function backToPrevious(){
+    show(previousPage);
+}
+
+function saveHistory(){
+
+    const canvas =
+    document.getElementById("after");
+
+    if(historyIndex < history.length - 1){
+        history = history.slice(0, historyIndex + 1);
+    }
+
+    const data = canvas.toDataURL();
+    history.push(data);
+    historyIndex = history.length - 1;
+}
+
+function undoImage(){
+    if(historyIndex <= 0) return;
+    historyIndex--;
+    loadHistory();
+}
+
+function redoImage(){
+    if(historyIndex >= history.length - 1) return;
+    historyIndex++;
+    loadHistory();
+}
+
+function loadHistory(){
+
+    const img = new Image();
+
+    img.onload = function(){
+
+        const canvas =
+        document.getElementById("after");
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        const ctx = canvas.getContext("2d");
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+    };
+
+    img.src = history[historyIndex];
+}
+
+function logoutUser(){
+
+    document.getElementById("loginNama").value = "";
+    document.getElementById("loginPassword").value = "";
+
+    show("login");
+}
+
+// fungsi bantu untuk draw gambar fit ke canvas
+function drawFit(canvas, imgSrc){
+
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const scaleVal = Math.min(
+        canvas.width / imgSrc.width,
+        canvas.height / imgSrc.height
+    );
+
+    const xVal = (canvas.width - imgSrc.width * scaleVal) / 2;
+    const yVal = (canvas.height - imgSrc.height * scaleVal) / 2;
+
+    ctx.drawImage(
+        imgSrc,
+        xVal, yVal,
+        imgSrc.width * scaleVal,
+        imgSrc.height * scaleVal
+    );
+}
+
+document
+.getElementById("upload")
+.addEventListener(
+"change",
+function(e){
+
+    const file = e.target.files[0];
+
+    if(!file) return;
+
+    const img = new Image();
+
+    img.onload = function(){
+
+        // canvas before
+        const canvas =
+        document.getElementById("before");
+
+        canvas.width = 300;
+        canvas.height = 220;
+
+        drawFit(canvas, img);
+
+        // baca gambar dari canvas before
+        srcImage = cv.imread("before");
+
+        // canvas after
+        const after =
+        document.getElementById("after");
+
+        after.width = 300;
+        after.height = 220;
+
+        // tampilkan gambar asli di after sementara
+        const tempCtx = after.getContext("2d");
+        tempCtx.clearRect(0, 0, 300, 220);
+        drawFit(after, img);
+
+        history = [];
+        historyIndex = -1;
+
+        saveHistory();
+    };
+
+    img.src = URL.createObjectURL(file);
+});
+
+function processImage(){
+
+    if(!srcImage){
+        alert("Upload gambar dulu");
+        return;
+    }
+
+    let dst = new cv.Mat();
+    let gray = new cv.Mat();
+
+    cv.cvtColor(
+        srcImage,
+        gray,
+        cv.COLOR_RGBA2GRAY
+    );
+
+    const value =
+    parseInt(
+    document.getElementById("slider").value
+    );
+
+    if(mode === "canny"){
+
+        cv.Canny(
+            gray,
+            dst,
+            value,
+            value * 2
+        );
+    }
+
+    else if(mode === "sobel"){
+
+        cv.Sobel(
+            gray,
+            dst,
+            cv.CV_8U,
+            1,
+            1
+        );
+    }
+
+    else if(mode === "prewitt"){
+
+        let kernel =
+        cv.matFromArray(
+        3, 3,
+        cv.CV_32F,
+        [
+            -1, 0, 1,
+            -1, 0, 1,
+            -1, 0, 1
+        ]);
+
+        cv.filter2D(
+            gray,
+            dst,
+            cv.CV_8U,
+            kernel
+        );
+
+        kernel.delete();
+    }
+
+    else if(mode === "lowpass"){
+
+        let k =
+        value % 2 === 0
+        ? value + 1
+        : value;
+
+        cv.GaussianBlur(
+            srcImage,
+            dst,
+            new cv.Size(k, k),
+            0
+        );
+    }
+
+    else if(mode === "highpass"){
+
+        let blur = new cv.Mat();
+
+        cv.GaussianBlur(
+            srcImage,
+            blur,
+            new cv.Size(9, 9),
+            0
+        );
+
+        cv.addWeighted(
+            srcImage,
+            1.5,
+            blur,
+            -0.5,
+            0,
+            dst
+        );
+
+        blur.delete();
+    }
+
+    // tampilkan hasil ke canvas after dengan ukuran tetap
+    const afterCanvas =
+    document.getElementById("after");
+
+    afterCanvas.width = 300;
+    afterCanvas.height = 220;
+
+    const tempCanvas =
+    document.createElement("canvas");
+
+    cv.imshow(tempCanvas, dst);
+
+    const afterCtx =
+    afterCanvas.getContext("2d");
+
+    afterCtx.clearRect(0, 0, 300, 220);
+
+    const scaleAfter = Math.min(
+        300 / tempCanvas.width,
+        220 / tempCanvas.height
+    );
+
+    const xAfter =
+    (300 - tempCanvas.width * scaleAfter) / 2;
+
+    const yAfter =
+    (220 - tempCanvas.height * scaleAfter) / 2;
+
+    afterCtx.drawImage(
+        tempCanvas,
+        xAfter, yAfter,
+        tempCanvas.width * scaleAfter,
+        tempCanvas.height * scaleAfter
+    );
+
+    saveHistory();
+
+    gray.delete();
+    dst.delete();
+}
+
+function downloadImage(){
+
+    const before =
+    document.getElementById("before");
+
+    const after =
+    document.getElementById("after");
+
+    if(
+        !before.width ||
+        !after.width
+    ){
+        alert("Belum ada gambar");
+        return;
+    }
+
+    const result =
+    document.createElement("canvas");
+
+    const ctx = result.getContext("2d");
+
+    const padding = 60;
+    const titleHeight = 120;
+    const labelHeight = 40;
+
+    result.width =
+    before.width +
+    after.width +
+    padding * 3;
+
+    result.height =
+    Math.max(
+        before.height,
+        after.height
+    ) + titleHeight + labelHeight + padding;
+
+    // background putih
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, result.width, result.height);
+
+    // judul utama
+    let judulUtama =
+    (mode === "canny" ||
+     mode === "sobel" ||
+     mode === "prewitt")
+    ? "Segmentasi"
+    : "Filtering";
+
+    let namaMetode =
+    mode === "canny"   ? "Canny" :
+    mode === "sobel"   ? "Sobel" :
+    mode === "prewitt" ? "Prewitt" :
+    mode === "lowpass" ? "Low Pass Filter" :
+    "High Pass Filter";
+
+    ctx.fillStyle = "black";
+    ctx.textAlign = "center";
+
+    ctx.font = "bold 42px Arial";
+    ctx.fillText(
+        judulUtama,
+        result.width / 2,
+        55
+    );
+
+    ctx.font = "bold 30px Arial";
+    ctx.fillText(
+        namaMetode,
+        result.width / 2,
+        95
+    );
+
+    // label Before
+    ctx.font = "bold 26px Arial";
+    ctx.fillText(
+        "Before",
+        padding + before.width / 2,
+        titleHeight + labelHeight - 5
+    );
+
+    // gambar Before
+    ctx.drawImage(
+        before,
+        padding,
+        titleHeight + labelHeight
+    );
+
+    // label After
+    const xAfter =
+    padding * 2 + before.width;
+
+    ctx.fillText(
+        "After",
+        xAfter + after.width / 2,
+        titleHeight + labelHeight - 5
+    );
+
+    // gambar After
+    ctx.drawImage(
+        after,
+        xAfter,
+        titleHeight + labelHeight
+    );
+
+    const link =
+    document.createElement("a");
+
+    link.download = "hasil-before-after.png";
+    link.href = result.toDataURL();
+    link.click();
+}
+
+function downloadResult(){
+
+    if(isGuest){
+        alert("Login untuk mendownload hasil");
+        return;
+    }
+
+    downloadImage();
+}
+
+</script>
+
+</body>
+</html>
